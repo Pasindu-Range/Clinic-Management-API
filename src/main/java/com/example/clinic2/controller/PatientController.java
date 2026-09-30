@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +22,8 @@ public class PatientController {
         this.patientService = patientService;
     }
 
-    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @GetMapping
     public List<PatientResponseDto> getPatients() {
         return patientService.getAll();
     }
