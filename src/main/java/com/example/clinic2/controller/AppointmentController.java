@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +37,17 @@ public class AppointmentController {
         );
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<List<AppointmentResponseDto>> getMyAppointments(
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                appointmentService.getMyAppointments(
+                        authentication.getName()
+                )
+        );
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentResponseDto> getAppointmentById(

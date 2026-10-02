@@ -3,9 +3,11 @@ package com.example.clinic2.service;
 import com.example.clinic2.dto.patientDto.PatientCreateDto;
 import com.example.clinic2.dto.patientDto.PatientResponseDto;
 import com.example.clinic2.entity.Patient;
+import com.example.clinic2.entity.User;
 import com.example.clinic2.exception.PatientNotFoundException;
 import com.example.clinic2.mapper.PatientMapper;
 import com.example.clinic2.repo.PatientRepository;
+import com.example.clinic2.repo.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,12 @@ import java.util.List;
 @Service
 public class PatientService {
     private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
 
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository,
+                          UserRepository userRepository) {
         this.patientRepository = patientRepository;
+        this.userRepository = userRepository;
     }
 
     public List<PatientResponseDto> getAll() {
@@ -79,5 +84,23 @@ public class PatientService {
                 );
 
         return patients.map(PatientMapper::toDto);
+    }
+
+    public PatientResponseDto getMyProfile(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        Patient patient = user.getPatient();
+
+        if (patient == null) {
+            throw new PatientNotFoundException(
+                    "Patient profile not found"
+            );
+        }
+
+        return PatientMapper.toDto(patient);
     }
 }

@@ -3,16 +3,15 @@ package com.example.clinic2.service;
 import com.example.clinic2.dto.appointmentdto.AppointmentCreateDto;
 import com.example.clinic2.dto.appointmentdto.AppointmentResponseDto;
 import com.example.clinic2.dto.appointmentdto.AppointmentUpdateDto;
-import com.example.clinic2.entity.Appointment;
-import com.example.clinic2.entity.AppointmentStatus;
-import com.example.clinic2.entity.Doctor;
-import com.example.clinic2.entity.Patient;
+import com.example.clinic2.entity.*;
 import com.example.clinic2.exception.AppointmentNotFoundException;
 import com.example.clinic2.exception.DoctorNotFoundException;
+import com.example.clinic2.exception.PatientNotFoundException;
 import com.example.clinic2.mapper.AppointmentMapper;
 import com.example.clinic2.repo.AppointmentRepository;
 import com.example.clinic2.repo.DoctorRepository;
 import com.example.clinic2.repo.PatientRepository;
+import com.example.clinic2.repo.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,14 +21,19 @@ import java.util.List;
 @Service
 public class AppointmentService {
 
-    private AppointmentRepository appointmentRepository;
-    private DoctorRepository doctorRepository;
-    private PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository) {
+    public AppointmentService(AppointmentRepository appointmentRepository,
+                              DoctorRepository doctorRepository,
+                              PatientRepository patientRepository,
+                              UserRepository userRepository) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
+        this.userRepository = userRepository;
     }
 
     public Page<AppointmentResponseDto> getAllAppointments(
@@ -103,6 +107,29 @@ public class AppointmentService {
                 );
 
         appointmentRepository.delete(appointment);
+    }
+
+    public List<AppointmentResponseDto> getMyAppointments(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        Patient patient = user.getPatient();
+
+        if (patient == null) {
+            throw new PatientNotFoundException(
+                    "Patient profile not found"
+            );
+        }
+
+        List<Appointment> appointments =
+                appointmentRepository.findByPatientId(patient.getId());
+
+        return appointments.stream()
+                .map(AppointmentMapper::toDto)
+                .toList();
     }
 
 

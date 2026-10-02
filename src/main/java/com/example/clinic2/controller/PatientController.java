@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,12 @@ public class PatientController {
         this.patientService = patientService;
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('PATIENT')")
+    public PatientResponseDto getMyProfile(Authentication authentication) {
+
+        return patientService.getMyProfile(authentication.getName());
+    }
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public List<PatientResponseDto> getPatients() {
